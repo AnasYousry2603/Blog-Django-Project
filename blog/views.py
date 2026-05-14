@@ -1,9 +1,11 @@
-
-from .models import Post
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import TemplateView, ListView, DetailView
 from django.views.generic.base import RedirectView
+from django.views import View
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
+from .models import Post
 from .forms import Commentform
 
 # Create your views here.
@@ -33,16 +35,35 @@ class AllPostsview(ListView):
 #     })
 
 
-class SinglePostView(DetailView):
+class SinglePostView(View):
     template_name = "blog/post-detail.html"
     model = Post
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["post_tags"] = self.object.tags.all()
-        context["comment_form"] = Commentform()
-        return context
+    def get(self, request, slug):
+        post = Post.objects.get(slug=slug)
+        context = {
+            "post": post,
+            "post_tags": post.tags.all(),
+            "comment_form": Commentform()
+        }
+        return render(request, "blog/post-detail.html", context)
 
+    def post(self, request, slug):
+        comment_form = Commentform(request.POST)
+        post = Post.objects.get(slug=slug)
+        
+        if comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.post = post
+            comment.save()
+            return HttpResponseRedirect(reverse("post-detail-page", args=[slug]))
+        
+        context = {
+            "post": post,
+            "post_tags": post.tags.all(),
+            "comment_form": Commentform()
+        }
+        return render(request, "blog/post-detail.html", context)
 # def post_detail(request, slug):
 #     identified_post = get_object_or_404(Post, slug=slug)
 #     return render(request, "blog/post-detail.html", {
