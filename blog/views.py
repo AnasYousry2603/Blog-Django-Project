@@ -44,7 +44,8 @@ class SinglePostView(View):
         context = {
             "post": post,
             "post_tags": post.tags.all(),
-            "comment_form": Commentform()
+            "comment_form": Commentform(),
+            "comments": post.comments.all().order_by("-id")
         }
         return render(request, "blog/post-detail.html", context)
 
@@ -61,7 +62,8 @@ class SinglePostView(View):
         context = {
             "post": post,
             "post_tags": post.tags.all(),
-            "comment_form": Commentform()
+            "comment_form": comment_form,
+            "comments": post.comments.all().order_by("-id")
         }
         return render(request, "blog/post-detail.html", context)
 # def post_detail(request, slug):
